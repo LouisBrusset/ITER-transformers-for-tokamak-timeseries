@@ -37,4 +37,5 @@ htmlcov/
 data/**/*.nc
 data/**/*.npy
 data/**/*.pt
+data/**/*.csv
 ## But keep this specific file

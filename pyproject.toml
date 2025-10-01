@@ -33,14 +33,17 @@ dependencies = [
     "torch>=2.2.0,<2.5.0",
     "ipykernel>=6.29.0",
     "pytest>=8.4.1",
-    "pytest-cov>=6.2.1"
+    "pytest-cov>=6.2.1",
+    "transformers",
+    "granite-tsfm @ git+https://github.com/ibm-granite/granite-tsfm.git",
+    "tensorboard>=2.20.0",
 ]
 
 [project.optional-dependencies]
 dev = [
     "black>=24.4.0",
     "flake8>=7.0.0",
-    "mypy>=1.10.0",
+    "mypy>=1.10.0"
 ]
 
 [project.urls]
