@@ -25,7 +25,7 @@ env/
 *.log
 
 # User generated files
-#
+.env
 
 # Test generated directories
 htmlcov/
