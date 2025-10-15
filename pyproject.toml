@@ -38,6 +38,7 @@ dependencies = [
     "granite-tsfm @ git+https://github.com/ibm-granite/granite-tsfm.git",
     "tensorboard>=2.20.0",
     "altair>=5.5.0",
+    "ipympl>=0.9.8",
 ]
 
 [project.optional-dependencies]

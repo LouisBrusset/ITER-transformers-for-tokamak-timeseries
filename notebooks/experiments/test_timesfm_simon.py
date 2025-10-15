@@ -1,3 +1,5 @@
+# %%
+
 import numpy as np
 import torch
 from transformers import TimesFmModelForPrediction
@@ -18,7 +20,7 @@ f = 2 * np.pi * wave_number / t[-1]
 t_pred = t[-1] + step * (1 + np.arange(model.config.horizon_length))
 
 def ground_truth(t):
-    return np.exp(-0.05 * t) * 10 * np.sin(f * t) + 5 * np.sin(2*f*t)
+    return np.exp(-0.05 * t) * 10 * np.sin(f * t) + 5 * np.sin(3*f*t)
 
 # Create dummy inputs
 forecast_input = [ground_truth(t)]
@@ -53,3 +55,6 @@ truth = alt.Chart(gt_data).mark_line(color='red').encode(x='x', y='y')
 predict = alt.Chart(data).mark_point().encode(x='x', y='y')
 
 (base + truth + predict).interactive()
+# %%
+
+
