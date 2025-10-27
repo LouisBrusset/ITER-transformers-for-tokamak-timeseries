@@ -27,7 +27,7 @@ def ground_truth(t):
 
 # Create dummy inputs
 forecast_input = [ground_truth(t)]
-frequency_input = [0]
+frequency_input = [0, 1, 2, 3, 4]
 
 # Convert inputs to sequence of tensors
 forecast_input_tensor = [
@@ -37,7 +37,7 @@ frequency_input_tensor = torch.tensor(frequency_input, dtype=torch.long).to(
     model.device
 )
 print(f"Input tensor shape: {forecast_input_tensor[0].shape}")
-print(f"Frequency tensor shape: {frequency_input_tensor[0].shape}")
+print(f"Frequency tensor shape: {frequency_input_tensor.shape}")
 
 # Get predictions from the pre-trained model
 with torch.no_grad():
