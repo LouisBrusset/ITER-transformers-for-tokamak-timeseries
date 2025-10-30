@@ -44,7 +44,7 @@ def train_scinet(
 
             optimizer.zero_grad()
             possible_answer, mean, logvar = model(observations, questions)
-            loss, l_kld, l_recon = trans_scinet_loss(possible_answer, a_corr, mean, logvar, beta=kld_beta)
+            loss, l_kld, l_recon = trans_scinet_loss(possible_answer, a_corr, mean, logvar, beta=kld_beta, truncate_input=False)
             loss.backward()
             if gradient_clipper is not None:
                 gradient_clipper.on_backward_end(model)
@@ -69,7 +69,7 @@ def train_scinet(
                 a_corr = a_corr.to(device)
 
                 possible_answer, mean, logvar = model(observations, questions)
-                loss = trans_scinet_loss(possible_answer, a_corr, mean, logvar, beta=kld_beta)[0]
+                loss = trans_scinet_loss(possible_answer, a_corr, mean, logvar, beta=kld_beta, truncate_input=False)[0]
                 valid_loss += loss.item() * observations.size(0)
         
         valid_loss /= len(valid_loader.dataset)
@@ -129,6 +129,7 @@ if __name__ == "__main__":
         dec_hidden_sizes=config.M_DEC_HIDDEN_SIZES,
         output_size=config.M_OUTPUT_SIZE
     ).bfloat16()
+    print(pendulum_net)
     optimizer = torch.optim.Adam(pendulum_net.parameters(), lr=config.FIRST_LEARNING_RATE, weight_decay=config.WEIGHT_DECAY)
     early_stopper = EarlyStopping(patience=config.ES_PATIENCE, min_delta=config.ES_MIN_DELTA)
     gradient_clipper = GradientClipping(max_norm=config.GC_MAX_NORM)

@@ -17,11 +17,14 @@ class SciNetEncoder(nn.Module):
             scinet_input_size = 1280  # Default size from TimesFmFeatureExtractor output
         self.input_sizes = [scinet_input_size] + hidden_sizes[:-1]
         self.output_sizes = hidden_sizes
-        self.layers = nn.ModuleList(
+        self.ff_layers = nn.ModuleList(
             [nn.Linear(in_size, out_size) for in_size, out_size in zip(self.input_sizes, self.output_sizes)]
         )
+        self.norm_layers = nn.ModuleList(
+            [nn.LayerNorm(size) for size in hidden_sizes]
+        )
         self.activations = nn.ModuleList(
-            [nn.ELU() for _ in range(len(hidden_sizes))]
+            [nn.SELU() for _ in range(len(hidden_sizes))]
         )
         self.mean_layer = nn.Linear(hidden_sizes[-1], latent_size)
         self.logvar_layer = nn.Linear(hidden_sizes[-1], latent_size)
@@ -33,10 +36,12 @@ class SciNetEncoder(nn.Module):
             past_values=x_list,
             freq=freq
         )
-        x = features.mean(dim=1)  # Aggregate over number of patches
+        weights = self.feature_extractor.build_weighted_matrix(features, threshold=0.001).unsqueeze(-1)  # Get weights for useful components
+        x = (features * weights).sum(dim=1) / weights.sum(dim=1)  # Weighted average over number of patches
+        # x is now an aggregated representation of constant size over number of patches
 
-        for layer, activation in zip(self.layers, self.activations):
-            x = activation(layer(x))
+        for ff_layer, activation, norm_layer in zip(self.ff_layers, self.activations, self.norm_layers):
+            x = activation(norm_layer(ff_layer(x)))
         mean = self.mean_layer(x)
         logvar = self.logvar_layer(x)
         return mean, logvar
@@ -52,17 +57,20 @@ class QuestionDecoder(nn.Module):
         super().__init__()
         self.input_sizes = [latent_size + question_size] + hidden_sizes
         self.output_sizes = hidden_sizes + [output_size]
-        self.layers = nn.ModuleList(
+        self.ff_layers = nn.ModuleList(
             [nn.Linear(in_size, out_size) for in_size, out_size in zip(self.input_sizes, self.output_sizes)]
         )
+        self.norm_layers = nn.ModuleList(
+            [nn.LayerNorm(size) for size in hidden_sizes] + [nn.Identity()]  # No norm for output layer
+        )
         self.activations = nn.ModuleList(
-            [nn.ELU() for _ in range(len(hidden_sizes))] + [nn.Identity()]
+            [nn.SELU() for _ in range(len(hidden_sizes))] + [nn.Identity()]
         )
 
     def forward(self, z: torch.Tensor, question: torch.Tensor) -> torch.Tensor:
         z = torch.cat([z, question], dim=-1)
-        for layer, activation in zip(self.layers, self.activations):
-            z = activation(layer(z))
+        for ff_layer, activation, norm_layer in zip(self.ff_layers, self.activations, self.norm_layers):
+            z = activation(norm_layer(ff_layer(z)))
         return z
 
 

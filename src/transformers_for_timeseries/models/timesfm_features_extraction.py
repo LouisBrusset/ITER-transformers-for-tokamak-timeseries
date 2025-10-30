@@ -47,7 +47,35 @@ class TimesFmFeatureExtractor:
                 return features
             else:
                 raise RuntimeError("No features intercepted by the hook")
-    
+
     def __del__(self):
         if hasattr(self, 'hook_handle'):
             self.hook_handle.remove()
+    
+    def build_weighted_matrix(self, features, threshold: float = 0.001):
+        """
+        We realize that some features extracted by TimesFm are really similar, particularly when the input sequence is short.
+        In details, for short input sequences, the n first patches are equal to each other, and the information stays only in the N-n last patches.
+        So realizing the mean over all patches features break the flow of information.
+        To avoid this, we will yield only the number of useful components in the feature sequence.
+        After several experiments, we define useful components as those whose RMSE with respect to the first feature vector is above a certain threshold. (RMSE with the mean vector didn't give good results).
+        Then the number of useful components is the number of feature vectors satisfying this condition, counting from the last one (due to TimesFM implementation).
+
+        Args:
+            features (torch.Tensor): Tensor of shape (batch_size, n_patches, feature_size)
+            threshold (float): Threshold to determine useful components.
+
+        Returns:
+            torch.Tensor: shape (batch_size, number_of_patches) 
+                          Matrix of weights (0 or 1) indicating useful components for each sample in the batch.
+        """
+        rmse = torch.sqrt(torch.mean((features - features[:, 0, :][:, None, :]) ** 2, dim=2))  # shape (batch_size, n_patches)
+        useful_components = torch.sum(rmse > threshold, axis=1) # shape (batch_size,)
+
+        matrix_weights = torch.zeros_like(features[:, :, 0])  # shape (batch_size, n_patches)
+        for i in range(features.shape[0]):
+            n_useful = useful_components[i]
+            if n_useful > 0:
+                matrix_weights[i, -n_useful:] = 1.0
+
+        return matrix_weights

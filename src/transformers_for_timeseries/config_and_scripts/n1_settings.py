@@ -22,9 +22,9 @@ class Config:
     DIR_OTHERS_DATA.mkdir(parents=True, exist_ok=True)
 
     DIR_RESULTS = Path(__file__).absolute().parent.parent.parent.parent / f"results" / f"{NAME}"
-    DIR_MODEL_PARAMS = DIR_RESULTS / f"model_params" / f"{NAME}"
+    DIR_MODEL_PARAMS = DIR_RESULTS / f"model_params"
     DIR_PARAMS_CHECKPOINTS = DIR_MODEL_PARAMS / f"checkpoints"
-    DIR_FIGURES = DIR_RESULTS / f"figures" / f"{NAME}"
+    DIR_FIGURES = DIR_RESULTS / f"figures"
     DIR_MODEL_PARAMS.mkdir(parents=True, exist_ok=True)
     DIR_PARAMS_CHECKPOINTS.mkdir(parents=True, exist_ok=True)
     DIR_FIGURES.mkdir(parents=True, exist_ok=True)
@@ -37,7 +37,7 @@ class Config:
 
     ### Data parameters
     # Synthetic forced damped pendulum
-    N_SAMPLES = 20000
+    N_SAMPLES = 5000
     MAXTIME = 100.0
     TIMESTEPS = 2000
 
@@ -56,18 +56,18 @@ class Config:
 
     ### SCINET architecture
     M_INPUT_SIZE = 1280     # output of Transformer encoder
-    M_ENC_HIDDEN_SIZES =  [50]
+    M_ENC_HIDDEN_SIZES =  [500, 500]
     M_LATENT_SIZE = 3
     M_QUESTION_SIZE = TIMESTEPS
-    M_DEC_HIDDEN_SIZES =  [500, 500]
+    M_DEC_HIDDEN_SIZES =  [500, 500, 500]
     M_OUTPUT_SIZE = TIMESTEPS
 
     ### Hyperparameters
-    BATCH_SIZE_TRAIN = 50
-    BATCH_SIZE_EVAL = 50
-    FIRST_LEARNING_RATE = 5e-4
+    BATCH_SIZE_TRAIN = 100
+    BATCH_SIZE_EVAL = 100
+    FIRST_LEARNING_RATE = 3e-3
     WEIGHT_DECAY = 1e-6     # if needed
-    KLD_BETA = 0.001
+    KLD_BETA = 0.0002
 
     ### Train parameters
     NUM_EPOCHS = 150
