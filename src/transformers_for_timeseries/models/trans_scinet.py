@@ -8,11 +8,12 @@ class SciNetEncoder(nn.Module):
     def __init__(self, 
                  scinet_input_size: int | None = 1280,
                  latent_size: int = 3,
-                 hidden_sizes: list[int] = [128, 64]
+                 hidden_sizes: list[int] = [128, 64],
+                 extractor_device_map: str = "auto",
                  ) -> None:
         
         super().__init__()
-        self.feature_extractor = TimesFmFeatureExtractor()
+        self.feature_extractor = TimesFmFeatureExtractor(device_map=extractor_device_map)
         if scinet_input_size is None:
             scinet_input_size = 1280  # Default size from TimesFmFeatureExtractor output
         self.input_sizes = [scinet_input_size] + hidden_sizes[:-1]
@@ -81,10 +82,11 @@ class PendulumNet(nn.Module):
                  latent_size: int = 3, 
                  question_size: int = 1000,
                  dec_hidden_sizes: list[int] = [128, 128], 
-                 output_size: int = 1000
+                 output_size: int = 1000,
+                 extractor_device_map: str = "auto",
                  ) -> None:
         super().__init__()
-        self.encoder = SciNetEncoder(scinet_input_size=encoder_input_size, latent_size=latent_size, hidden_sizes=enc_hidden_sizes)
+        self.encoder = SciNetEncoder(scinet_input_size=encoder_input_size, latent_size=latent_size, hidden_sizes=enc_hidden_sizes, extractor_device_map=extractor_device_map)
         self.decoder = QuestionDecoder(latent_size=latent_size, question_size=question_size, output_size=output_size, hidden_sizes=dec_hidden_sizes)
 
 

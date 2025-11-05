@@ -2,12 +2,12 @@ import torch
 from transformers import TimesFmModelForPrediction
 
 class TimesFmFeatureExtractor:
-    def __init__(self, model_name="google/timesfm-2.0-500m-pytorch"):
+    def __init__(self, model_name="google/timesfm-2.0-500m-pytorch", device_map="auto"):
         self.model = TimesFmModelForPrediction.from_pretrained(
             model_name,
             dtype=torch.bfloat16,
             attn_implementation="sdpa",
-            device_map="auto",
+            device_map=device_map,
         )
         
         self.intercepted_features = {}

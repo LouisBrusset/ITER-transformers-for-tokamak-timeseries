@@ -25,7 +25,8 @@ def load_trained_model(model_path: str, device: torch.device = torch.device('cpu
         latent_size=config.M_LATENT_SIZE,
         question_size=config.M_QUESTION_SIZE,
         dec_hidden_sizes=config.M_DEC_HIDDEN_SIZES,
-        output_size=config.M_OUTPUT_SIZE
+        output_size=config.M_OUTPUT_SIZE,
+        extractor_device_map=device
     ).bfloat16()
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=False))
     model.to(device)
