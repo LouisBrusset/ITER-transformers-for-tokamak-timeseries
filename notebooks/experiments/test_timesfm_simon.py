@@ -7,11 +7,14 @@ from transformers import TimesFmModelForPrediction
 import altair as alt
 import pandas as pd
 
+device = torch.device("cuda:1" if torch.cuda.is_available() else "cpu")
+
+
 model = TimesFmModelForPrediction.from_pretrained(
     "google/timesfm-2.0-500m-pytorch",
     dtype=torch.bfloat16,
     attn_implementation="sdpa",
-    device_map="auto",
+    device_map=device,
 )
 model.config.horizon_length = 128
 
@@ -52,12 +55,14 @@ print(f"Output (quantiles) shape: {quantile_forecast_conv.shape}")
 
 # plot
 base_data = pd.DataFrame({'x': t,
-                     'y': forecast_input[0]})
+                        'y': forecast_input[0],
+                        'series': 'Input Series'})
 gt_data = pd.DataFrame({'x': t_pred,
-                        'y': ground_truth(t_pred)})
+                        'y': ground_truth(t_pred),
+                        'series': 'Ground Truth'})
 point_forecast_data = pd.DataFrame({'x': t_pred,
-                     'y': point_forecast_conv[0]
-                     })
+                        'y': point_forecast_conv[0],
+                        'series': 'Point Forecast'})
 quantile_data_list = []
 quantiles = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 for i, q in enumerate(quantiles):
@@ -72,28 +77,92 @@ confidence_data = pd.DataFrame({
     'x': np.concatenate([t_pred, t_pred[::-1]]),
     'y': np.concatenate([
         quantile_forecast_conv[0, :, 0],  # Q0.1
-        quantile_forecast_conv[0, ::-1, 8]  # Q0.9 (inversé pour fermer le polygone)
+        quantile_forecast_conv[0, ::-1, 8]  # Q0.9 (inversed to close the polygon)
     ])
 })
 
 
-base_chart = alt.Chart(base_data).mark_line().encode(x='x:Q', y='y:Q')
-truth_chart = alt.Chart(gt_data).mark_line(color='red').encode(x='x:Q', y='y:Q')
-point_forecast_chart = alt.Chart(point_forecast_data).mark_point().encode(x='x:Q', y='y:Q')
+base_chart = alt.Chart(base_data).mark_line().encode(
+    x='x:Q', 
+    y='y:Q',
+    color=alt.Color('series:N', title="Series")
+)
+truth_chart = alt.Chart(gt_data).mark_line().encode(
+    x='x:Q', 
+    y='y:Q',
+    color=alt.Color('series:N', title="Series")
+)
+point_forecast_chart = alt.Chart(point_forecast_data).mark_point(size=60).encode(
+    x='x:Q', 
+    y='y:Q',
+    color=alt.Color('series:N', title="Series")
+)
 quantile_chart = alt.Chart(quantile_data).mark_line(opacity=0.3).encode(
     x='x:Q',
     y='y:Q',
     color='quantile:N'
 )
-confidence_chart = alt.Chart(confidence_data).mark_area(opacity=0.5, color='gray').encode(
+confidence_chart = alt.Chart(confidence_data).mark_area(opacity=0.3, color='lightgray').encode(
     x='x:Q',
     y='y:Q'
 )
 
-final_chart = base_chart + truth_chart + point_forecast_chart
-final_chart.interactive()
+final_chart = alt.layer(
+    confidence_chart,
+    base_chart, 
+    truth_chart, 
+    point_forecast_chart,
+    quantile_chart
+).properties(
+    title="Time Series Forecasting with TimesFM",
+    width=800,
+    height=400
+).interactive()
+
+final_chart
 
 
 
+
+# %%
+import matplotlib.pyplot as plt
+
+# Création de la figure
+plt.figure(figsize=(12, 6))
+
+# 1. Zone de confiance (entre Q0.1 et Q0.9)
+plt.fill_between(t_pred, 
+                quantile_forecast_conv[0, :, 0],  # Q0.1
+                quantile_forecast_conv[0, :, 8],  # Q0.9
+                alpha=0.3, color='gray', label='80% Confidence Interval')
+
+# 2. Série d'entrée
+plt.plot(t, forecast_input[0], 'b-', linewidth=2, label='Input Series')
+
+# 3. Vérité terrain
+plt.plot(t_pred, ground_truth(t_pred), 'r-', linewidth=2, label='Ground Truth')
+
+# 4. Prévision ponctuelle
+plt.plot(t_pred, point_forecast_conv[0], 'go', markersize=4, label='Point Forecast')
+
+# 5. Quantiles (optionnel - pour voir tous les quantiles)
+for i, q in enumerate(quantiles):
+    if i == 0 or i == len(quantiles)-1:  # Afficher seulement Q0.1 et Q0.9 pour éviter la surcharge
+        continue
+    plt.plot(t_pred, quantile_forecast_conv[0, :, i], '--', 
+             color='purple', alpha=0.2, linewidth=0.5)
+
+# Configuration du plot
+plt.title('Time Series Forecasting with TimesFM', fontsize=14, fontweight='bold')
+plt.xlabel('Time', fontsize=12)
+plt.ylabel('Value', fontsize=12)
+plt.grid(True, alpha=0.3)
+plt.legend(loc='best')
+
+# Ajustement des limites pour mieux voir la transition
+#plt.xlim([t[-50], t_pred[-1]])
+
+plt.tight_layout()
+plt.show()
 
 # %%

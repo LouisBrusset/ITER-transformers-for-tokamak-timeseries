@@ -1,0 +1,5 @@
+Last train loss: 0.0574
+    - Last KLD loss: 14.23
+    - Last recon loss: 0.0531
+
+Last val loss: 0.0724

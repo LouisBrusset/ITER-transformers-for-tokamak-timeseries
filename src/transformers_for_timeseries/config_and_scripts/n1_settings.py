@@ -1,4 +1,5 @@
 from pathlib import Path
+import torch
 # import yaml
 
 from transformers_for_timeseries.ml_tools.random_seeds_setting import seed_everything
@@ -7,7 +8,7 @@ from transformers_for_timeseries.ml_tools.pytorch_device_selection import select
 class Config:
     """Global variables configuration"""
 
-    NAME = "synthetic_pendulum_1"
+    NAME = "synthetic_pendulum_3"
 
     ##########################################    
     ### Paths
@@ -31,7 +32,8 @@ class Config:
 
 
     ### PyTorch device & set seed for reproducibility
-    DEVICE = select_torch_device(temporal_dim="sequential", gpu_id=1)
+    DEVICE = select_torch_device(temporal_dim="sequential", gpu_id=0)
+    #DEVICE = torch.device("cuda:0")
     SEED = 42
     seed_everything(SEED)
 
@@ -41,8 +43,8 @@ class Config:
     MAXTIME = 100.0
     TIMESTEPS = 2000
 
-    BETA_RANGE = (0.1, 1.0)
-    KAPA_RANGE = (0.5, 20.0)
+    BETA_RANGE = (0.5, 1.2)
+    KAPA_RANGE = (1.0, 20.0)
     THETA0 = 1.0
     OMEGA0 = 0.0
     A_VALUE = None
@@ -56,21 +58,21 @@ class Config:
 
     ### SCINET architecture
     M_INPUT_SIZE = 1280     # output of Transformer encoder
-    M_ENC_HIDDEN_SIZES =  [500, 500]
+    M_ENC_HIDDEN_SIZES =  [500, 100]
     M_LATENT_SIZE = 3
     M_QUESTION_SIZE = TIMESTEPS
-    M_DEC_HIDDEN_SIZES =  [500, 500, 500]
+    M_DEC_HIDDEN_SIZES =  [500, 500]
     M_OUTPUT_SIZE = TIMESTEPS
 
     ### Hyperparameters
     BATCH_SIZE_TRAIN = 100
     BATCH_SIZE_EVAL = 100
-    FIRST_LEARNING_RATE = 3e-3
+    FIRST_LEARNING_RATE = 8e-3
     WEIGHT_DECAY = 1e-6     # if needed
-    KLD_BETA = 0.0002
+    KLD_BETA = 0.0003
 
     ### Train parameters
-    NUM_EPOCHS = 150
+    NUM_EPOCHS = 100
     ES_PATIENCE = 12
     ES_MIN_DELTA = 5e-5
     GC_MAX_NORM = 1.0

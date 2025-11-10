@@ -342,6 +342,7 @@ if __name__ == "__main__":
 
     # Load model
     model_path = config.DIR_MODEL_PARAMS / f"{config.BEST_MODEL_NAME}.pth"
+    #model_path = config.DIR_PARAMS_CHECKPOINTS / f"pendulum_scinet_checkpointed.pth"
     pendulum_net = load_trained_model(model_path, device)
 
     # Load test dataset

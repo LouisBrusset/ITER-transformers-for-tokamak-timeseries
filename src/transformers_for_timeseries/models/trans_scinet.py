@@ -83,7 +83,7 @@ class PendulumNet(nn.Module):
                  question_size: int = 1000,
                  dec_hidden_sizes: list[int] = [128, 128], 
                  output_size: int = 1000,
-                 extractor_device_map: str = "auto",
+                 extractor_device_map: str = "cuda:0",
                  ) -> None:
         super().__init__()
         self.encoder = SciNetEncoder(scinet_input_size=encoder_input_size, latent_size=latent_size, hidden_sizes=enc_hidden_sizes, extractor_device_map=extractor_device_map)
